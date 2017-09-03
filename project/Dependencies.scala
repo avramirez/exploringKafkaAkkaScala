@@ -12,10 +12,12 @@ object Dependencies {
 
   val akkaStreamsKafka = "com.typesafe.akka" %% "akka-stream-kafka" % "0.17"
 
+  val akkaQuartz = "com.enragedginger" %% "akka-quartz-scheduler" % "1.6.0-akka-2.4.x"
+
   val scalactic = "org.scalactic" %% "scalactic" % "3.0.1"
   val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1"
 
   // Projects
   val backendDeps =
-    Seq(akkaActor, akkaStreamsKafka,akkaHttp,akkaSprayJson, scalaTest % Test, scalactic % Test)
+    Seq(akkaActor, akkaStreamsKafka,akkaHttp,akkaSprayJson,akkaQuartz, scalaTest % Test, scalactic % Test)
 }
