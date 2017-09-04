@@ -20,29 +20,30 @@ import org.apache.kafka.clients.producer.ProducerRecord
 class KafkaProducer(implicit mat: ActorMaterializer) extends Actor with ActorLogging{
   import KafkaProducer._
   def receive = {
-    case KafkaMessage(topic,source:Source[Flight, NotUsed] ,producerSettings : ProducerSettings[Array[Byte], Array[Byte]]) =>
+    case PublishFlightMessage(topic,source ,producerSettings) =>
 
       source.map { s =>
         new ProducerRecord[Array[Byte], Array[Byte]](topic, SimpleSerializer.serialize(s))
       }.runWith(Producer.plainSink(producerSettings))
 
 
-    case msg : KafkaMessage => log.error(s"Unsupported Kafka Message! Will not process message : $msg")
+    case msg => log.error(s"Unsupported Kafka Message! Will not process message : $msg")
 
 
   }
 }
 
 object KafkaProducer {
-
   def props(implicit mat: ActorMaterializer) : Props = Props(new KafkaProducer)
 
-  /**
+  val actorName = "KafkaProducer"
+
+  /**I tried to make a generic KafkaMessage and I ran out time  :P
     *
     *@param topic target topic to write into
-    *@param source to be changed maybe to Iteratable
+    *@param source you can pass Iterable[T] scala implicit conversion will kick in to make it as Source
     *@param producerSettings producer settings to be used for Producer.plainSink
     *
     * */
-  case class KafkaMessage(topic: String,source: Source[_,_],producerSettings : ProducerSettings[_,_])
+  case class PublishFlightMessage(topic: String,source:Source[Flight, NotUsed],producerSettings : ProducerSettings[Array[Byte], Array[Byte]])
 }

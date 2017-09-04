@@ -18,7 +18,7 @@ import akka.NotUsed
 import akka.kafka.{ConsumerSettings, ProducerSettings, Subscriptions}
 import akka.kafka.scaladsl.{Consumer, Producer}
 import akka.stream.scaladsl.{Sink, Source}
-import com.kafkaflight.KafkaProducer.KafkaMessage
+import com.kafkaflight.KafkaProducer.{PublishFlightMessage}
 import com.kafkaflight.PollingActor.GetRecentFlights
 import com.typesafe.akka.extension.quartz.QuartzSchedulerExtension
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -31,31 +31,39 @@ object Init extends App {
   implicit val system = ActorSystem()
   implicit val materializer = ActorMaterializer()
 
-
-  val pollingActor = system.actorOf(PollingActor.props)
+  val pollingActor = system.actorOf(PollingActor.props,PollingActor.actorName)
+  // TODO - use akka router
+  val kafkaProducer = system.actorOf(KafkaProducer.props,KafkaProducer.actorName)
 
   val scheduler = QuartzSchedulerExtension(system)
+  scheduler.schedule("Every30Seconds", pollingActor, GetRecentFlights)
 
 
-  val consumerSettings = ConsumerSettings(system, new ByteArrayDeserializer, new ByteArrayDeserializer)
-    .withBootstrapServers("localhost:9092")
-    .withGroupId("group1")
-    .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
+  //TODO - get host and port from application config
+  val producerSettings: ProducerSettings[Array[Byte], Array[Byte]] = ProducerSettings(system, new ByteArraySerializer, new ByteArraySerializer).withBootstrapServers("localhost:9092")
+
+
 //
-  val partition = 0
-  val fromOffset : Long = 100
-
-  val subscription = Subscriptions.assignmentWithOffset(
-    new TopicPartition("test", partition) -> fromOffset
-  )
-  val done =
-    Consumer.plainSource(consumerSettings, subscription)
-      .mapAsync(1)(record => {
-        println("RAW " + record)
-
-        Future{println("BITCH 3333" + SimpleSerializer.deserialize[Flight](record.value()))}
-      })
-      .runWith(Sink.ignore)
+//
+//  val consumerSettings = ConsumerSettings(system, new ByteArrayDeserializer, new ByteArrayDeserializer)
+//    .withBootstrapServers("localhost:9092")
+//    .withGroupId("group1")
+//    .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
+////
+//  val partition = 0
+//  val fromOffset : Long = 116
+//
+//  val subscription = Subscriptions.assignmentWithOffset(
+//    new TopicPartition("test", partition) -> fromOffset
+//  )
+//  val done =
+//    Consumer.plainSource(consumerSettings, subscription)
+//      .mapAsync(1)(record => {
+//        println("RAW " + record)
+//
+//        Future{println("BITCH 3333" + SimpleSerializer.deserialize[Flight](record.value()))}
+//      })
+//      .runWith(Sink.ignore)
 
 //
 //  Consumer.committableSource(consumerSettings, Subscriptions.topics("test"))
@@ -85,14 +93,7 @@ object Init extends App {
 //
 //
 //
-//  val producerSettings: ProducerSettings[Array[Byte], Array[Byte]] = ProducerSettings(system, new ByteArraySerializer, new ByteArraySerializer)
-//    .withBootstrapServers("localhost:9092")
-//  val testList: Source[Flight, NotUsed] = Source(List(Flight("flightId5",Some("fligh5"),"destination5"),Flight("flightId6",Some("fligh6"),"destination6")))
-//
-//  // TODO - use akka router
-//  val kafkaProducer = system.actorOf(KafkaProducer.props,"KafkaProducer")
-//
-//  kafkaProducer ! KafkaMessage("test",testList,producerSettings)
+
 
 
 //
@@ -108,7 +109,7 @@ object Init extends App {
 //    }
 //    .runWith(Producer.plainSink(producerSettings))
 //
-//  scheduler.schedule("Every30Seconds", pollingActor, GetRecentFlights)
+
 //
 //  val responseFuture: Future[HttpResponse] = {
 //    Http().singleRequest(HttpRequest(HttpMethods.GET,Uri("https://opensky-network.org/api/states/all?icao24=aa8c39")))
