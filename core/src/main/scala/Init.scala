@@ -1,50 +1,42 @@
 package com.kafkaflight
 
-import java.util.concurrent.atomic.AtomicLong
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.http.scaladsl.unmarshalling.Unmarshal
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.{Failure, Success}
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
-import spray.json._
-import CustomJsonProtocol._
+
 import DomainObjects._
-import akka.NotUsed
 import akka.kafka.{ConsumerSettings, ProducerSettings, Subscriptions}
-import akka.kafka.scaladsl.{Consumer, Producer}
-import akka.stream.scaladsl.{Sink, Source}
-import com.kafkaflight.KafkaProducer.{PublishFlightMessage}
+import akka.kafka.scaladsl.{Consumer}
+import akka.stream.scaladsl.{Sink}
 import com.kafkaflight.PollingActor.GetRecentFlights
 import com.typesafe.akka.extension.quartz.QuartzSchedulerExtension
 import org.apache.kafka.clients.consumer.ConsumerConfig
-import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.TopicPartition
-import org.apache.kafka.common.serialization.{ByteArrayDeserializer, ByteArraySerializer, StringDeserializer, StringSerializer}
+import org.apache.kafka.common.serialization.{ByteArrayDeserializer, ByteArraySerializer}
 
 object Init extends App {
 
   implicit val system = ActorSystem()
   implicit val materializer = ActorMaterializer()
 
-  val pollingActor = system.actorOf(PollingActor.props,PollingActor.actorName)
-  // TODO - use akka router
-  val kafkaProducer = system.actorOf(KafkaProducer.props,KafkaProducer.actorName)
-
-  val scheduler = QuartzSchedulerExtension(system)
-  scheduler.schedule("Every30Seconds", pollingActor, GetRecentFlights)
-
 
   //TODO - get host and port from application config
   val producerSettings: ProducerSettings[Array[Byte], Array[Byte]] = ProducerSettings(system, new ByteArraySerializer, new ByteArraySerializer).withBootstrapServers("localhost:9092")
 
 
-//
-//
+  val pollingActor = system.actorOf(PollingActor.props,PollingActor.SERVICE_NAME)
+  // TODO - use akka router
+  val kafkaProducer = system.actorOf(KafkaProducer.props(producerSettings),KafkaProducer.SERVICE_NAME)
+
+  val scheduler = QuartzSchedulerExtension(system)
+  scheduler.schedule("Every30Seconds", pollingActor, GetRecentFlights)
+
+
+
+
 //  val consumerSettings = ConsumerSettings(system, new ByteArrayDeserializer, new ByteArrayDeserializer)
 //    .withBootstrapServers("localhost:9092")
 //    .withGroupId("group1")
@@ -64,7 +56,7 @@ object Init extends App {
 //        Future{println("BITCH 3333" + SimpleSerializer.deserialize[Flight](record.value()))}
 //      })
 //      .runWith(Sink.ignore)
-
+//
 //
 //  Consumer.committableSource(consumerSettings, Subscriptions.topics("test"))
 //    .mapAsync(1) { msg =>
@@ -78,57 +70,6 @@ object Init extends App {
 //      msg.committableOffset.commitScaladsl()
 //    }
 //    .runWith(Sink.ignore)
-//
-//
-//
-//
-//
-//
-//  val fuckshit = Flight("flightId1",Some("fligh1"),"destination1")
-//
-//  val sereee = SimpleSerializer.serialize(fuckshit)
-//  val backtoMyself = SimpleSerializer.deserialize[Flight](sereee)
-//
-//  println("AM I BACK? BITCH?" + backtoMyself)
-//
-//
-//
-
-
-
-//
-//  testList.map { fl =>
-//    new ProducerRecord[Array[Byte], Array[Byte]]("test", SimpleSerializer.serialize(fl))
-//  }.runWith(Producer.plainSink(producerSettings))
-
-
-//  val done = Source(1 to 100)
-//    .map(_.toString)
-//    .map { elem =>
-//      new ProducerRecord[Array[Byte], String]("test", elem)
-//    }
-//    .runWith(Producer.plainSink(producerSettings))
-//
-
-//
-//  val responseFuture: Future[HttpResponse] = {
-//    Http().singleRequest(HttpRequest(HttpMethods.GET,Uri("https://opensky-network.org/api/states/all?icao24=aa8c39")))
-//  }
-//
-//
-//  val result = responseFuture.flatMap {
-//    case HttpResponse(StatusCodes.OK, headers, entity, _) => Unmarshal(entity).to[String].map {
-//      JsonParser(_).convertTo[PolledFlights]
-//    }
-//    case _ => null
-//
-//  }
-//
-//  result onComplete {
-//    case Success(s) => println("I AM Success wohooo " + s)
-//    case Failure(e) => e.printStackTrace()
-//  }
-
 
 }
 
