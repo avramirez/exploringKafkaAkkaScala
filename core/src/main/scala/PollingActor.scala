@@ -24,27 +24,33 @@ class PollingActor(implicit mat: ActorMaterializer) extends Actor with ActorLogg
   implicit val system = context.system
 
   def receive = {
-    case GetRecentFlights =>
+    case GetRecentFlights => {
       log.debug("Poll baby poll")
 
       val responseFuture: Future[HttpResponse] = {
-        Http().singleRequest(HttpRequest(HttpMethods.GET,Uri("https://opensky-network.org/api/states/all?icao24=4240eb")))
+        Http().singleRequest(HttpRequest(HttpMethods.GET,Uri("https://opensky-network.org/api/states/all?icao24=aa3cbf")))
       }
 
       responseFuture onComplete {
         case Success(response) =>
           response match {
             case HttpResponse(StatusCodes.OK, headers, entity, _) =>
-              log.debug("RESPONSE OK")
-              pipe(Unmarshal(entity).to[String].map(JsonParser(_).convertTo[PolledFlights])) to self
+
+             Unmarshal(entity).to[String].foreach{ jsonString =>
+               val flights = JsonParser(jsonString).convertTo[PolledFlights].flights
+               if(flights.nonEmpty){
+                _kafkaProducer ! PublishFlightMessage("test",Source(JsonParser(jsonString).convertTo[PolledFlights].flights))
+               }else {
+                 log.warning("Flights are empty! Not publishing any message!")
+               }
+              }
+
             case response => log.error(s"Invalid response! ${response.status}")
 
           }
         case Failure(e) => log.error(s"Failure in http request! ${e.getMessage}")
       }
-
-    case polledFlights : PolledFlights =>
-      _kafkaProducer ! PublishFlightMessage("test",Source(polledFlights.flights))
+    }
 
     case _ => log.error("Unknown Poll Operation")
   }
