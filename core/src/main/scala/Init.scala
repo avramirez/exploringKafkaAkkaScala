@@ -18,7 +18,7 @@ import org.apache.kafka.common.serialization.{ByteArrayDeserializer, ByteArraySe
   * - Create a docker-compose file for easy deployment (spotify:kafka,cassandra,and self)
   * - Create UnitTest
   * - Create Integration Test
-  * - Refactor - removed magic values. Get it from application config. ex: kafka host, kafka port, etc..
+  * - Refactor - removed magic values. Get it from application config. ex: kafka host, kafka port, topics, etc..
   *
   * */
 
