@@ -5,6 +5,7 @@ import java.util.UUID
 import akka.Done
 import com.datastax.driver.core._
 import com.kafkaflight.DomainObjects.Flight
+import org.slf4j.LoggerFactory
 
 import scala.util._
 import scala.concurrent._
@@ -14,6 +15,8 @@ class CassandraDao {
   import CassandraDao._
 
 
+  private val log = LoggerFactory.getLogger(getClass)
+
   def createFlightRow(flight: Flight)(implicit ec: ExecutionContext): Future[Done] = {
     Future {
 
@@ -21,8 +24,8 @@ class CassandraDao {
         case Success(resultSet) =>
           Done
         case Failure(e) =>
-          //Log failure
-          Done
+          log.error(s"Failure to create row in cassandra! ${e.getMessage}")
+          throw new Exception("Database Failure!")
       }
     }
   }
@@ -64,16 +67,16 @@ class CassandraDao {
 //    }
 //  }
 
-  def proccessCountResultSet(resultSet: ResultSet): Boolean = {
-    Option(resultSet.one()) match {
-      case Some(frow) => {
-       if (CassandraDao.getCount(frow) > 0) true else false
-
-      }
-      case None =>
-        false
-    }
-  }
+//  def proccessCountResultSet(resultSet: ResultSet): Boolean = {
+//    Option(resultSet.one()) match {
+//      case Some(frow) => {
+//       if (CassandraDao.getCount(frow) > 0) true else false
+//
+//      }
+//      case None =>
+//        false
+//    }
+//  }
 
 }
 

@@ -28,7 +28,7 @@ class PollingActor(implicit mat: ActorMaterializer) extends Actor with ActorLogg
       log.debug("Poll baby poll")
 
       val responseFuture: Future[HttpResponse] = {
-        Http().singleRequest(HttpRequest(HttpMethods.GET,Uri("https://opensky-network.org/api/states/all?icao24=aa3cbf")))
+        Http().singleRequest(HttpRequest(HttpMethods.GET,Uri("https://opensky-network.org/api/states/all")))
       }
 
       responseFuture onComplete {

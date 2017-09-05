@@ -3,8 +3,8 @@ package com.kafkaflight
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-
 import akka.kafka.{ConsumerSettings, ProducerSettings, Subscriptions}
+import com.kafkaflight.DomainObjects.Flight
 import com.kafkaflight.KafkaConsumer.START_CONSUMER
 import com.kafkaflight.PollingActor.GetRecentFlights
 import com.typesafe.akka.extension.quartz.QuartzSchedulerExtension
@@ -29,6 +29,7 @@ object Init extends App {
 
   CassandraDatabase.createSchema
 
+  val cassandraDao = new CassandraDao
 
   val pollingActor = system.actorOf(PollingActor.props,PollingActor.SERVICE_NAME)
 
@@ -50,7 +51,7 @@ object Init extends App {
     .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
 
 
-  val kafkaConsumer = system.actorOf(KafkaConsumer.props(consumerSettings))
+  val kafkaConsumer = system.actorOf(KafkaConsumer.props(cassandraDao,consumerSettings))
   kafkaConsumer ! START_CONSUMER
 
 }
