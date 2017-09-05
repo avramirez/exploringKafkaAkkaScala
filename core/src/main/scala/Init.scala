@@ -15,7 +15,10 @@ import org.apache.kafka.common.serialization.{ByteArrayDeserializer, ByteArraySe
   * TODO - Project
   *
   * - Integrate sbt native-packager for containerization
-  * - Create a docker-compose file for easy deployment (spotify:kafka,cassandra,and self)
+  * - Create a docker-compose file for easy deployment :
+  *     spotify:kafka (kafka container with zookeeper)
+  *     cassandra - DONE
+  *     self - ....
   * - Create UnitTest
   * - Create Integration Test
   * - Refactor - removed magic values. Get it from application config. ex: kafka host, kafka port, topics, etc..
