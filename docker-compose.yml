@@ -1,0 +1,12 @@
+version: '2'
+
+services:
+  cassandra:
+      container_name: kafkatest-cassandra
+      image: cassandra:3.2
+      ports:
+        - 7000:7000 # Internode communication (not used if TLS enabled)
+        - 7199:7199
+        - 9160:9160 # Thrift client API
+        - 9042:9042 # CQL native transport port
+

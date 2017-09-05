@@ -17,7 +17,18 @@ object Dependencies {
   val scalactic = "org.scalactic" %% "scalactic" % "3.0.1"
   val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1"
 
+  val cassandraCore = "com.datastax.cassandra" % "cassandra-driver-core" % "3.0.0"
+  val cassandraMapping ="com.datastax.cassandra" % "cassandra-driver-mapping" % "3.0.0"
+
   // Projects
   val backendDeps =
-    Seq(akkaActor, akkaStreamsKafka,akkaHttp,akkaSprayJson,akkaQuartz, scalaTest % Test, scalactic % Test)
+    Seq(akkaActor,
+      akkaStreamsKafka,
+      akkaHttp,
+      akkaSprayJson,
+      akkaQuartz,
+      cassandraCore,
+      cassandraMapping,
+      scalaTest % Test,
+      scalactic % Test)
 }

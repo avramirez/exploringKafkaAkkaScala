@@ -8,8 +8,6 @@ import akka.stream.scaladsl.Sink
 import com.kafkaflight.DomainObjects.Flight
 import com.kafkaflight.KafkaConsumer.START_CONSUMER
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class KafkaConsumer(consumerSettings : ConsumerSettings[Array[Byte], Array[Byte]])(implicit val mat: ActorMaterializer) extends Actor with ActorLogging{
   def receive = {
@@ -18,7 +16,7 @@ class KafkaConsumer(consumerSettings : ConsumerSettings[Array[Byte], Array[Byte]
         .mapAsync(1) { msg =>
           //TODO Add saving in cassandra
           val flight = SimpleSerializer.deserialize[Flight](msg.record.value())
-            log.debug("BITCH OFfSsET {} ====> {}",msg.record.offset,flight )
+            log.debug("OFfSsET {} ====> {}",msg.record.offset,flight )
 
           msg.committableOffset.commitScaladsl()
         }
